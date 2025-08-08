@@ -1,0 +1,32 @@
+# Btrfs Rollback Configuration
+#
+# This configuration file defines the required paths and subvolume names
+# for performing a rollback to a previous Btrfs snapshot.
+#
+# ⚠️ WARNING:
+# This tool is intended to be used in a **live environment** (e.g., booted from
+# a Live ISO or from a snapshot itself). Running it directly on a mounted root
+# system can cause irreversible damage if not handled properly.
+#
+# System Requirements:
+# - A flat Btrfs subvolume layout as recommended here:
+#   https://wiki.archlinux.org/title/Snapper#Suggested_filesystem_layout
+#
+# Terminology:
+# - `main`: Your currently active Linux root subvolume (mounted as `/`).
+# - `root`: The top-level Btrfs subvolume (`subvolid=5`), which contains all subvolumes.
+#           Learn more at:
+#           https://btrfs.readthedocs.io/en/latest/btrfs-subvolume.html#description
+#
+
+# Name of your root subvolume (usually "@")
+subvol_main = "@"
+
+# Name of the subvolume where snapshots are stored
+subvol_snapshots = "@snapshots"
+
+# Temporary directory where the Btrfs root will be mounted
+mountpoint = "/btrfs"
+
+# Path to the Btrfs device. Required only if auto-mounting is needed
+# dev = "/dev/sda2"
