@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
-
+	"strings"
 	"github.com/xeyossr/btrfs-rollback/internal/config"
 )
 
@@ -110,26 +110,32 @@ func GetSnapshots(cfg config.Config) ([]Snapshot, error) {
 
 // MountSubvol performs the mount operation for the BTRFS subvolume if not already mounted
 func MountSubvol(cfg config.Config) error {
-	// Check if the mountpoint is already mounted by inspecting the mount status
-	cmd := exec.Command("mount", "--grep", cfg.Mountpoint)
-	output, err := cmd.CombinedOutput()
-	if err != nil || len(output) == 0 {
-		// Mount the device with the appropriate subvolid if it's not mounted
-		if cfg.Dev != nil && *cfg.Dev != "" {
-			// Mount the btrfs subvolume if it's not mounted
-			cmd := exec.Command("mount", "-o", "subvolid=5", *cfg.Dev, cfg.Mountpoint)
-			if dryRun {
-				fmt.Printf("[dry-run] Would execute: %v\n", cmd.Args)
-			}
-			if err := cmd.Run(); err != nil {
-				return fmt.Errorf("failed to mount %s: %v", *cfg.Dev, err)
-			}
-		} else {
-			return fmt.Errorf("device not specified, unable to mount %s", cfg.Mountpoint)
-		}
-	} else {
-		fmt.Println("Mountpoint is already mounted.")
+	// Check if the mountpoint is already mounted by parsing the output of the 'mount' command
+	checkCmd := exec.Command("mount")
+	output, err := checkCmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("failed to check mount status: %v", err)
 	}
+
+	if strings.Contains(string(output), cfg.Mountpoint) {
+		return nil
+	}
+
+	// Mount the device with the appropriate subvolid if it's not mounted
+	if cfg.Dev != nil && *cfg.Dev != "" {
+		mountCmd := exec.Command("mount", "-o", "subvolid=5", *cfg.Dev, cfg.Mountpoint)
+		if dryRun {
+			fmt.Printf("[dry-run] Would execute: %v\n", mountCmd.Args)
+			return nil
+		}
+		if err := mountCmd.Run(); err != nil {
+			return fmt.Errorf("failed to mount %s: %v", *cfg.Dev, err)
+		}
+		fmt.Printf("Mounted %s to %s\n", *cfg.Dev, cfg.Mountpoint)
+	} else {
+		return fmt.Errorf("device not specified, unable to mount %s", cfg.Mountpoint)
+	}
+
 	return nil
 }
 

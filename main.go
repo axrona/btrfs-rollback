@@ -22,6 +22,9 @@ func main() {
 	cfg := cmd.Config()
 	btrfs.SetDryRun(cmd.DryRun())
 
+	// Root?
+	utils.CheckIfRoot()
+	
 	// Mount the BTRFS subvolume first
 	err := btrfs.MountSubvol(cfg)
 	Must(err)
